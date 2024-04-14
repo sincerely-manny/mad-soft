@@ -1,9 +1,18 @@
 import type { Config } from 'tailwindcss';
+import { fontFamily } from 'tailwindcss/defaultTheme';
+import daisyui from 'daisyui';
 
 export default {
-    content: [],
+    content: ['./src/**/*.tsx'],
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                sans: ['Inter', ...fontFamily.sans],
+            },
+        },
     },
-    plugins: [],
+    plugins: [daisyui],
+    daisyui: {
+        themes: ['night'],
+    },
 } satisfies Config;
