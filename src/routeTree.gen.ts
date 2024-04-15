@@ -13,43 +13,41 @@ import { createFileRoute } from '@tanstack/react-router'
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as LayoutImport } from './routes/_layout'
+import { Route as TestImport } from './routes/test'
 
 // Create Virtual Routes
 
-const LayoutIndexLazyImport = createFileRoute('/_layout/')()
+const IndexLazyImport = createFileRoute('/')()
 
 // Create/Update Routes
 
-const LayoutRoute = LayoutImport.update({
-  id: '/_layout',
+const TestRoute = TestImport.update({
+  path: '/test',
   getParentRoute: () => rootRoute,
 } as any)
 
-const LayoutIndexLazyRoute = LayoutIndexLazyImport.update({
+const IndexLazyRoute = IndexLazyImport.update({
   path: '/',
-  getParentRoute: () => LayoutRoute,
-} as any).lazy(() => import('./routes/_layout.index.lazy').then((d) => d.Route))
+  getParentRoute: () => rootRoute,
+} as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_layout': {
-      preLoaderRoute: typeof LayoutImport
+    '/': {
+      preLoaderRoute: typeof IndexLazyImport
       parentRoute: typeof rootRoute
     }
-    '/_layout/': {
-      preLoaderRoute: typeof LayoutIndexLazyImport
-      parentRoute: typeof LayoutImport
+    '/test': {
+      preLoaderRoute: typeof TestImport
+      parentRoute: typeof rootRoute
     }
   }
 }
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren([
-  LayoutRoute.addChildren([LayoutIndexLazyRoute]),
-])
+export const routeTree = rootRoute.addChildren([IndexLazyRoute, TestRoute])
 
 /* prettier-ignore-end */

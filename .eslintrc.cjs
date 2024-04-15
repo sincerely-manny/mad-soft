@@ -19,5 +19,23 @@ module.exports = {
         'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
         'react/react-in-jsx-scope': 'off',
         'react/jsx-uses-react': 'off',
+        'no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+        'no-underscore-dangle': 'off',
+        '@typescript-eslint/naming-convention': 'off',
+        'no-plusplus': 'off',
+        'import/extensions': [
+            'error',
+            {
+                ignorePackages: true,
+                pattern: {
+                    js: 'never',
+                    jsx: 'never',
+                    ts: 'never',
+                    tsx: 'never',
+                    json: 'always',
+                },
+            },
+        ],
     },
 };

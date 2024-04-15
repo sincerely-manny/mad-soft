@@ -3,7 +3,7 @@ import { fontFamily } from 'tailwindcss/defaultTheme';
 import daisyui from 'daisyui';
 
 export default {
-    content: ['./src/**/*.tsx'],
+    content: ['./src/**/*.tsx', './*.html'],
     theme: {
         extend: {
             fontFamily: {
@@ -13,6 +13,6 @@ export default {
     },
     plugins: [daisyui],
     daisyui: {
-        themes: ['night'],
+        themes: ['pastel'],
     },
 } satisfies Config;
