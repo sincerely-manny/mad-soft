@@ -8,6 +8,7 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Inter', ...fontFamily.sans],
+                mono: ['Noto Sans Mono', ...fontFamily.mono],
             },
         },
     },

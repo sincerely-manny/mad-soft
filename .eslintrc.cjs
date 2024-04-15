@@ -19,6 +19,7 @@ module.exports = {
         'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
         'react/react-in-jsx-scope': 'off',
         'react/jsx-uses-react': 'off',
+        'react/require-default-props': ['error', { functions: 'defaultArguments' }],
         'no-unused-vars': 'off',
         '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
         'no-underscore-dangle': 'off',

@@ -1,17 +1,23 @@
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Countdown from '@/components/page/test/countdown';
 import ProgresBar from '@/components/page/test/progressbar';
-import { QuestoinsSetDTO, QuestoinsSetDTOSchema, getRandomQuestions } from '@/server-mock';
+import { type QuestoinsSetDTO, QuestoinsSetDTOSchema, getRandomQuestions } from '@/server-mock';
+import TestId from '@/components/page/test/test-id';
 
 function Test() {
     const [activeTest, setActiveTest] = useState<QuestoinsSetDTO | null>(null);
     const getTestMutation = useMutation({
         mutationFn: getRandomQuestions,
     });
+    const testLoaded = useRef(false);
 
     useEffect(() => {
+        if (testLoaded.current) {
+            return;
+        }
+        testLoaded.current = true;
         try {
             const storedTest = localStorage.getItem('activeTest');
             if (storedTest) {
@@ -29,8 +35,6 @@ function Test() {
                 },
                 {
                     onSuccess: (data) => {
-                        console.log('onSuccess');
-                        console.log(data);
                         try {
                             QuestoinsSetDTOSchema.parse(data);
                             setActiveTest(data);
@@ -45,15 +49,13 @@ function Test() {
                 },
             );
         }
-    }, []);
+    }, [getTestMutation]);
 
     return (
         <section className="w-full">
             <div className="my-10 flex items-center justify-between">
                 <h1 className="text-6xl font-light">Тестирование</h1>
-                <p>
-                    ID теста: <span className="font-mono">{activeTest?.setId}</span>
-                </p>
+                <TestId testId={activeTest?.setId} />
                 <Countdown endUntil={activeTest?.endUntil ?? 0} startTime={activeTest?.startTime ?? 0} />
             </div>
             <ProgresBar total={15} progress={10} />

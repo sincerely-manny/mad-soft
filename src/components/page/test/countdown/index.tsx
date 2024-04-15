@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { CSSProperties, useEffect, useState } from 'react';
 import { getCurrentTimestamp } from '@/server-mock';
+import Loader from '@/components/shared/loader';
 
 type CountdownProps = {
     startTime: number;
@@ -33,18 +34,24 @@ export default function Countdown({ startTime, endUntil }: CountdownProps) {
     }, []);
 
     const timeLeft = (endUntil - (clientTime ?? 0)) / 1000;
-    const progress = Math.ceil(((timeLeft * 1000) / (endUntil - startTime)) * 100);
-    // const isTimeLeft = timeLeft > 0;
-    const minutesLeft = Math.floor(timeLeft / 60);
-    const secondsLeft = Math.floor(timeLeft % 60);
+    let progress = Math.ceil(((timeLeft * 1000) / (endUntil - startTime)) * 100);
+    const isTimeLeft = timeLeft > 0;
+    let minutesLeft = Math.floor(timeLeft / 60);
+    let secondsLeft = Math.floor(timeLeft % 60);
 
     if (startTime === 0 || endUntil === 0) {
-        return null;
+        return <Loader size={80} />;
+    }
+
+    if (!isTimeLeft) {
+        progress = 100;
+        minutesLeft = 0;
+        secondsLeft = 0;
     }
 
     return (
         <div
-            className="radial-progress text-neutral opacity-70"
+            className="radial-progress text-neutral"
             style={{ '--value': progress } as CSSProperties}
             role="progressbar"
         >
