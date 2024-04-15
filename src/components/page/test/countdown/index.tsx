@@ -34,7 +34,7 @@ export default function Countdown({ startTime, endUntil }: CountdownProps) {
     }, []);
 
     const timeLeft = (endUntil - (clientTime ?? 0)) / 1000;
-    let progress = Math.ceil(((timeLeft * 1000) / (endUntil - startTime)) * 100);
+    let progress = Math.ceil(((timeLeft * 1000) / (endUntil - startTime)) * 100 * 10) / 10;
     const isTimeLeft = timeLeft > 0;
     let minutesLeft = Math.floor(timeLeft / 60);
     let secondsLeft = Math.floor(timeLeft % 60);

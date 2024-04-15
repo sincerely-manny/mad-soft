@@ -1,33 +1,45 @@
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState, useRef } from 'react';
+import { z } from 'zod';
 import Countdown from '@/components/page/test/countdown';
 import ProgresBar from '@/components/page/test/progressbar';
-import { type QuestoinsSetDTO, QuestoinsSetDTOSchema, getRandomQuestions } from '@/server-mock';
+import { QuestoinsSetDTOSchema, getRandomQuestions } from '@/server-mock';
 import TestId from '@/components/page/test/test-id';
 
+const LocalStorageTestSchema = z.intersection(
+    QuestoinsSetDTOSchema,
+    z.object({
+        answers: z.record(z.string().uuid(), z.array(z.string())),
+        status: z.enum(['in_progress', 'completed']),
+    }),
+);
+
+type LocalStorageTest = z.infer<typeof LocalStorageTestSchema>;
+
 function Test() {
-    const [activeTest, setActiveTest] = useState<QuestoinsSetDTO | null>(null);
+    const [activeTest, setActiveTest] = useState<LocalStorageTest | null>(null);
+    const [testLoaded, setTestLoaded] = useState(false);
     const getTestMutation = useMutation({
         mutationFn: getRandomQuestions,
     });
-    const testLoaded = useRef(false);
 
     useEffect(() => {
-        if (testLoaded.current) {
+        if (testLoaded) {
             return;
         }
-        testLoaded.current = true;
+        setTestLoaded(true);
         try {
             const storedTest = localStorage.getItem('activeTest');
             if (storedTest) {
                 const data = JSON.parse(storedTest);
-                QuestoinsSetDTOSchema.parse(data);
+                LocalStorageTestSchema.parse(data);
                 setActiveTest(data);
             } else {
                 throw new Error('no stored test');
             }
         } catch (_err) {
+            console.log('no stored test, fetching new one', _err);
             getTestMutation.mutate(
                 {
                     count: 15,
@@ -35,10 +47,16 @@ function Test() {
                 },
                 {
                     onSuccess: (data) => {
+                        console.log('here!');
                         try {
-                            QuestoinsSetDTOSchema.parse(data);
-                            setActiveTest(data);
-                            localStorage.setItem('activeTest', JSON.stringify(data));
+                            const localData = {
+                                ...data,
+                                answers: {},
+                                status: 'in_progress' as const,
+                            };
+                            LocalStorageTestSchema.parse(localData);
+                            setActiveTest(localData);
+                            localStorage.setItem('activeTest', JSON.stringify(localData));
                         } catch (err) {
                             console.error(err);
                         }
@@ -46,10 +64,13 @@ function Test() {
                     onError: (err) => {
                         console.error(err);
                     },
+                    onSettled: () => {
+                        console.log('settled');
+                    },
                 },
             );
         }
-    }, [getTestMutation]);
+    }, [getTestMutation, testLoaded]);
 
     return (
         <section className="w-full">
