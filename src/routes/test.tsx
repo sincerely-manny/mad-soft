@@ -23,7 +23,6 @@ function Test() {
         if (testLoaded) {
             return;
         }
-        setTestLoaded(true);
         try {
             const storedTest = localStorage.getItem('activeTest');
             if (storedTest) {
@@ -49,7 +48,6 @@ function Test() {
                             };
                             LocalTestSchema.parse(localData);
                             setActiveTest(localData);
-                            localStorage.setItem('activeTest', JSON.stringify(localData));
                         } catch (err) {
                             console.error(err);
                         }
@@ -60,12 +58,20 @@ function Test() {
                 },
             );
         }
+        setTestLoaded(true);
     }, [getTestMutation, testLoaded]);
+
+    useEffect(() => {
+        if (!testLoaded) {
+            return;
+        }
+        localStorage.setItem('activeTest', JSON.stringify(activeTest));
+    }, [activeTest, testLoaded]);
 
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const { question: questionNumber } = Route.useSearch();
 
-    const [activeQuestionNumber, setActiveQuestionNumber] = useState<number | null>(null);
+    const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null);
 
     useEffect(() => {
         let q = questionNumber;
@@ -75,12 +81,26 @@ function Test() {
             } else if (questionNumber >= activeTest.questions.length) {
                 q = activeTest.questions.length - 1;
             }
-            setActiveQuestionNumber(q ?? 0);
+            setActiveQuestionIndex(q ?? 0);
             if (questionNumber !== q) {
                 navigate({ search: { question: q } });
             }
         }
     }, [activeTest, questionNumber, navigate]);
+
+    const setAnswer = (questionUUID: string) => (answer: string[]) => {
+        if (activeTest) {
+            const a = { ...activeTest };
+            a.answers[questionUUID] = answer;
+            setActiveTest(a);
+            console.log(a.answers);
+        }
+    };
+
+    let activeQuestion: LocalTest['questions'][number] | null = null;
+    if (activeTest !== null && activeQuestionIndex !== null) {
+        activeQuestion = activeTest?.questions[activeQuestionIndex];
+    }
 
     return (
         <>
@@ -90,18 +110,33 @@ function Test() {
                     <TestId testId={activeTest?.setId} />
                     <Countdown endUntil={activeTest?.endUntil ?? 0} startTime={activeTest?.startTime ?? 0} />
                 </div>
-                <ProgresBar total={activeTest?.questions.length ?? 0} progress={(activeQuestionNumber ?? 0) + 1} />
+                <ProgresBar total={activeTest?.questions.length ?? 0} progress={(activeQuestionIndex ?? 0) + 1} />
             </section>
-            <section className="flex w-full justify-between">
+
+            {activeQuestion === null ? (
+                <div className="flex place-self-center opacity-50">
+                    <Loader size={128} />
+                </div>
+            ) : (
+                <section>
+                    <Question
+                        questionData={activeQuestion}
+                        answer={activeTest?.answers[activeQuestion.uuid]}
+                        setAnswer={setAnswer(activeQuestion.uuid)}
+                    />
+                </section>
+            )}
+
+            <section className="mt-10 flex w-full justify-between">
                 <button
                     type="button"
                     onClick={() =>
                         navigate({
-                            search: { question: (activeQuestionNumber ?? 0) - 1 },
+                            search: { question: (activeQuestionIndex ?? 0) - 1 },
                         })
                     }
                     className="btn"
-                    disabled={!activeQuestionNumber}
+                    disabled={!activeQuestionIndex}
                 >
                     <ChevronLeft />
                     Предыдущий вопрос
@@ -110,26 +145,16 @@ function Test() {
                     type="button"
                     onClick={() =>
                         navigate({
-                            search: { question: (activeQuestionNumber ?? 0) + 1 },
+                            search: { question: (activeQuestionIndex ?? 0) + 1 },
                         })
                     }
                     className="btn btn-accent"
-                    disabled={activeTest?.questions.length === (activeQuestionNumber ?? 0) + 1}
+                    disabled={activeTest?.questions.length === (activeQuestionIndex ?? 0) + 1}
                 >
                     Следующий вопрос
                     <ChevronRight />
                 </button>
             </section>
-
-            {activeTest === null || activeQuestionNumber === null ? (
-                <div className="flex place-self-center opacity-50">
-                    <Loader size={128} />
-                </div>
-            ) : (
-                <section>
-                    <Question data={activeTest?.questions[activeQuestionNumber]} />
-                </section>
-            )}
         </>
     );
 }
