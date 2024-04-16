@@ -1,72 +1,19 @@
-import { useMutation } from '@tanstack/react-query';
-import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import Countdown from '@/components/page/test/countdown';
 import ProgresBar from '@/components/page/test/progressbar';
-import { getRandomQuestions } from '@/server-mock';
 import TestId from '@/components/page/test/test-id';
-import { type LocalTest, LocalTestSchema } from '@/types/test';
+import { type LocalTest } from '@/types/test';
 import Question from '@/components/page/test/question';
 import Loader from '@/components/shared/loader';
+import useTest from '@/hooks/test';
 
 function Test() {
     const navigate = useNavigate();
-    const [activeTest, setActiveTest] = useState<LocalTest | null>(null);
-    const [testLoaded, setTestLoaded] = useState(false);
-    const getTestMutation = useMutation({
-        mutationFn: getRandomQuestions,
-    });
 
-    useEffect(() => {
-        if (testLoaded) {
-            return;
-        }
-        try {
-            const storedTest = localStorage.getItem('activeTest');
-            if (storedTest) {
-                const data = JSON.parse(storedTest);
-                LocalTestSchema.parse(data);
-                setActiveTest(data);
-            } else {
-                throw new Error('no stored test');
-            }
-        } catch (_err) {
-            getTestMutation.mutate(
-                {
-                    count: 15,
-                    minutesToComplete: 20,
-                },
-                {
-                    onSuccess: (data) => {
-                        try {
-                            const localData = {
-                                ...data,
-                                answers: {},
-                                status: 'in_progress' as const,
-                            };
-                            LocalTestSchema.parse(localData);
-                            setActiveTest(localData);
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    },
-                    onError: (err) => {
-                        console.error(err);
-                    },
-                },
-            );
-        }
-        setTestLoaded(true);
-    }, [getTestMutation, testLoaded]);
-
-    useEffect(() => {
-        if (!testLoaded) {
-            return;
-        }
-        localStorage.setItem('activeTest', JSON.stringify(activeTest));
-    }, [activeTest, testLoaded]);
+    const { activeTest, setActiveTest } = useTest();
 
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const { question: questionNumber } = Route.useSearch();
@@ -93,7 +40,6 @@ function Test() {
             const a = { ...activeTest };
             a.answers[questionUUID] = answer;
             setActiveTest(a);
-            console.log(a.answers);
         }
     };
 
@@ -110,7 +56,7 @@ function Test() {
                     <TestId testId={activeTest?.setId} />
                     <Countdown endUntil={activeTest?.endUntil ?? 0} startTime={activeTest?.startTime ?? 0} />
                 </div>
-                <ProgresBar total={activeTest?.questions.length ?? 0} progress={(activeQuestionIndex ?? 0) + 1} />
+                <ProgresBar current={(activeQuestionIndex ?? 0) + 1} activeTest={activeTest || null} />
             </section>
 
             {activeQuestion === null ? (
