@@ -22,7 +22,7 @@ const ReturnedQuestionSchema = z
         ]),
     );
 
-type ReturnedQuestion = z.infer<typeof ReturnedQuestionSchema>;
+export type ReturnedQuestion = z.infer<typeof ReturnedQuestionSchema>;
 
 export const QuestoinsSetDTOSchema = z.object({
     questions: z.array(ReturnedQuestionSchema),

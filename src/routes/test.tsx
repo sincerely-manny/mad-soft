@@ -1,24 +1,19 @@
 import { useMutation } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState, useRef } from 'react';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 import Countdown from '@/components/page/test/countdown';
 import ProgresBar from '@/components/page/test/progressbar';
-import { QuestoinsSetDTOSchema, getRandomQuestions } from '@/server-mock';
+import { getRandomQuestions } from '@/server-mock';
 import TestId from '@/components/page/test/test-id';
-
-const LocalStorageTestSchema = z.intersection(
-    QuestoinsSetDTOSchema,
-    z.object({
-        answers: z.record(z.string().uuid(), z.array(z.string())),
-        status: z.enum(['in_progress', 'completed']),
-    }),
-);
-
-type LocalStorageTest = z.infer<typeof LocalStorageTestSchema>;
+import { type LocalTest, LocalTestSchema } from '@/types/test';
+import Question from '@/components/page/test/question';
+import Loader from '@/components/shared/loader';
 
 function Test() {
-    const [activeTest, setActiveTest] = useState<LocalStorageTest | null>(null);
+    const navigate = useNavigate();
+    const [activeTest, setActiveTest] = useState<LocalTest | null>(null);
     const [testLoaded, setTestLoaded] = useState(false);
     const getTestMutation = useMutation({
         mutationFn: getRandomQuestions,
@@ -33,13 +28,12 @@ function Test() {
             const storedTest = localStorage.getItem('activeTest');
             if (storedTest) {
                 const data = JSON.parse(storedTest);
-                LocalStorageTestSchema.parse(data);
+                LocalTestSchema.parse(data);
                 setActiveTest(data);
             } else {
                 throw new Error('no stored test');
             }
         } catch (_err) {
-            console.log('no stored test, fetching new one', _err);
             getTestMutation.mutate(
                 {
                     count: 15,
@@ -47,14 +41,13 @@ function Test() {
                 },
                 {
                     onSuccess: (data) => {
-                        console.log('here!');
                         try {
                             const localData = {
                                 ...data,
                                 answers: {},
                                 status: 'in_progress' as const,
                             };
-                            LocalStorageTestSchema.parse(localData);
+                            LocalTestSchema.parse(localData);
                             setActiveTest(localData);
                             localStorage.setItem('activeTest', JSON.stringify(localData));
                         } catch (err) {
@@ -64,28 +57,92 @@ function Test() {
                     onError: (err) => {
                         console.error(err);
                     },
-                    onSettled: () => {
-                        console.log('settled');
-                    },
                 },
             );
         }
     }, [getTestMutation, testLoaded]);
 
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    const { question: questionNumber } = Route.useSearch();
+
+    const [activeQuestionNumber, setActiveQuestionNumber] = useState<number | null>(null);
+
+    useEffect(() => {
+        let q = questionNumber;
+        if (activeTest !== null) {
+            if (questionNumber === undefined || questionNumber < 0) {
+                q = 0;
+            } else if (questionNumber >= activeTest.questions.length) {
+                q = activeTest.questions.length - 1;
+            }
+            setActiveQuestionNumber(q ?? 0);
+            if (questionNumber !== q) {
+                navigate({ search: { question: q } });
+            }
+        }
+    }, [activeTest, questionNumber, navigate]);
+
     return (
-        <section className="w-full">
-            <div className="my-10 flex items-center justify-between">
-                <h1 className="text-6xl font-light">Тестирование</h1>
-                <TestId testId={activeTest?.setId} />
-                <Countdown endUntil={activeTest?.endUntil ?? 0} startTime={activeTest?.startTime ?? 0} />
-            </div>
-            <ProgresBar total={15} progress={10} />
-        </section>
+        <>
+            <section className="mb-10 w-full">
+                <div className="my-10 flex items-center justify-between">
+                    <h1 className="text-6xl font-light">Тестирование</h1>
+                    <TestId testId={activeTest?.setId} />
+                    <Countdown endUntil={activeTest?.endUntil ?? 0} startTime={activeTest?.startTime ?? 0} />
+                </div>
+                <ProgresBar total={activeTest?.questions.length ?? 0} progress={(activeQuestionNumber ?? 0) + 1} />
+            </section>
+            <section className="flex w-full justify-between">
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate({
+                            search: { question: (activeQuestionNumber ?? 0) - 1 },
+                        })
+                    }
+                    className="btn"
+                    disabled={!activeQuestionNumber}
+                >
+                    <ChevronLeft />
+                    Предыдущий вопрос
+                </button>
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate({
+                            search: { question: (activeQuestionNumber ?? 0) + 1 },
+                        })
+                    }
+                    className="btn btn-accent"
+                    disabled={activeTest?.questions.length === (activeQuestionNumber ?? 0) + 1}
+                >
+                    Следующий вопрос
+                    <ChevronRight />
+                </button>
+            </section>
+
+            {activeTest === null || activeQuestionNumber === null ? (
+                <div className="flex place-self-center opacity-50">
+                    <Loader size={128} />
+                </div>
+            ) : (
+                <section>
+                    <Question data={activeTest?.questions[activeQuestionNumber]} />
+                </section>
+            )}
+        </>
     );
 }
 
+const TestQueryParamatersSchema = z.object({
+    question: z.number().optional().catch(undefined),
+});
+
+type TestQueryParamaters = z.infer<typeof TestQueryParamatersSchema>;
+
 export const Route = createFileRoute('/test')({
     component: Test,
+    validateSearch: (q: Record<string, unknown>): TestQueryParamaters => TestQueryParamatersSchema.parse(q),
 });
 
 export default Route;

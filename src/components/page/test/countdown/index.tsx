@@ -51,11 +51,17 @@ export default function Countdown({ startTime, endUntil }: CountdownProps) {
 
     return (
         <div
-            className="radial-progress text-neutral"
-            style={{ '--value': progress } as CSSProperties}
+            className="radial-progress text-primary-content/70"
+            style={
+                {
+                    '--value': progress,
+                    '--thickness': '0.25rem',
+                    color: `hsl(349, ${(100 - progress) / 2}%, 63%)`,
+                } as CSSProperties
+            }
             role="progressbar"
         >
-            <span className="countdown font-mono text-lg">
+            <span className="countdown font-mono text-xl">
                 <span style={{ '--value': minutesLeft } as CSSProperties} />:
                 <span style={{ '--value': secondsLeft } as CSSProperties} />
             </span>
