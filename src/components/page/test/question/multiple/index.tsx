@@ -24,7 +24,7 @@ export default function Multiple({ data: { options, uuid }, defaultChecked = und
 
     useEffect(() => {
         setAnswer(checked || []);
-    }, [checked]);
+    }, [checked, setAnswer]);
 
     return (
         <>

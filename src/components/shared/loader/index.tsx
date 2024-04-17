@@ -1,4 +1,4 @@
-import { LucideLoader, LucideLoader2 } from 'lucide-react';
+import { LucideLoader2 } from 'lucide-react';
 
 type LoaderProps = {
     size: number;
