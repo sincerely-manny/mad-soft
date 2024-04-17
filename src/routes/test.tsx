@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import Countdown from '@/components/page/test/countdown';
 import ProgresBar from '@/components/page/test/progressbar';
 import TestId from '@/components/page/test/test-id';
@@ -11,29 +11,30 @@ import Loader from '@/components/shared/loader';
 import useTest from '@/hooks/test';
 
 function Test() {
+    const [showSubmitDialog, setShowSubmitDialog] = useState(false);
     const navigate = useNavigate();
-
     const { activeTest, setActiveTest } = useTest();
 
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    const { question: questionNumber } = Route.useSearch();
+    const { question: questionIndex } = Route.useSearch();
 
     const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null);
 
     useEffect(() => {
-        let q = questionNumber;
+        let q = questionIndex;
         if (activeTest !== null) {
-            if (questionNumber === undefined || questionNumber < 0) {
+            if (questionIndex === undefined || questionIndex < 0) {
                 q = 0;
-            } else if (questionNumber >= activeTest.questions.length) {
+            } else if (questionIndex >= activeTest.questions.length) {
                 q = activeTest.questions.length - 1;
             }
             setActiveQuestionIndex(q ?? 0);
-            if (questionNumber !== q) {
+            if (questionIndex !== q) {
                 navigate({ search: { question: q } });
             }
         }
-    }, [activeTest, questionNumber, navigate]);
+        setShowSubmitDialog(false);
+    }, [activeTest, questionIndex, navigate]);
 
     const setAnswer = (questionUUID: string) => (answer: string[]) => {
         if (activeTest) {
@@ -47,6 +48,8 @@ function Test() {
     if (activeTest !== null && activeQuestionIndex !== null) {
         activeQuestion = activeTest?.questions[activeQuestionIndex];
     }
+
+    useEffect(() => {});
 
     return (
         <>
@@ -87,19 +90,44 @@ function Test() {
                     <ChevronLeft />
                     Предыдущий вопрос
                 </button>
-                <button
-                    type="button"
-                    onClick={() =>
-                        navigate({
-                            search: { question: (activeQuestionIndex ?? 0) + 1 },
-                        })
-                    }
-                    className="btn btn-accent"
-                    disabled={activeTest?.questions.length === (activeQuestionIndex ?? 0) + 1}
-                >
-                    Следующий вопрос
-                    <ChevronRight />
-                </button>
+                <div className="flex flex-col items-end gap-5">
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigate({
+                                search: { question: (activeQuestionIndex ?? 0) + 1 },
+                            })
+                        }
+                        className="btn btn-accent"
+                        disabled={activeTest?.questions.length === (activeQuestionIndex ?? 0) + 1}
+                    >
+                        Следующий вопрос
+                        <ChevronRight />
+                    </button>
+                    {activeTest?.questions.length === (activeQuestionIndex ?? 0) + 1 && !showSubmitDialog && (
+                        <button type="button" className="btn btn-warning" onClick={() => setShowSubmitDialog(true)}>
+                            Завершить тест <Check />
+                        </button>
+                    )}
+                    {activeTest?.questions.length === (activeQuestionIndex ?? 0) + 1 && showSubmitDialog && (
+                        <div className="flex items-center gap-5">
+                            <p className="text-sm font-light">
+                                Вы уверены, что хотите завершить тест? <br />
+                                После завершения теста вы не сможете вернуться к вопросам.
+                            </p>
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => setShowSubmitDialog(false)}
+                            >
+                                Отмена
+                            </button>
+                            <button type="button" className="btn btn-accent">
+                                Завершить
+                            </button>
+                        </div>
+                    )}
+                </div>
             </section>
         </>
     );
