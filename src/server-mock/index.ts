@@ -7,6 +7,7 @@ import {
     SingleChoiceQuestionSchema,
     type Question,
 } from './questions.types';
+import { LocalTest } from '@/types/test';
 
 const ReturnedQuestionSchema = z
     .object({
@@ -89,23 +90,32 @@ export async function getRandomQuestions({ count = 15, minutesToComplete = 20 })
     });
 }
 
-export async function checkAnswer(questionUUID: Question['uuid'], answer: string | string[]): Promise<boolean> {
-    const res = questions as Question[];
-    const question = res.find((q) => q.uuid === questionUUID);
-    let isCorrect = false;
-    if (!question) {
-        throw new Error('Question not found');
-    }
-    if (question.type === 'multiple') {
-        isCorrect = question.correct_answers.every((a) => answer.includes(a));
-    } else {
-        isCorrect = question.correct_answer === answer;
-    }
+type SubmitTestResponse = {
+    ok: boolean;
+    message: string;
+};
+
+export async function saveResults(_test: LocalTest): Promise<SubmitTestResponse> {
     return new Promise((resolve) => {
         setTimeout(() => {
-            resolve(isCorrect);
+            resolve({
+                ok: true,
+                message: 'Test submitted successfully',
+            });
         }, 1000);
     });
+}
+
+export function getCorrectAnswer(uuid: string) {
+    const res = questions as Question[];
+    const question = res.find((q) => q.uuid === uuid);
+    if (!question) {
+        return [];
+    }
+    if (question.type === 'multiple') {
+        return question.correct_answers;
+    }
+    return [question.correct_answer];
 }
 
 export async function getCurrentTimestamp(): Promise<number> {

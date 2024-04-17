@@ -62,10 +62,17 @@ const useTest = () => {
         localStorage.setItem('activeTest', JSON.stringify(activeTest));
     }, [activeTest, testLoaded]);
 
+    const resetTest = () => {
+        setTestLoaded(false);
+        localStorage.removeItem('activeTest');
+        setActiveTest(null);
+    };
+
     return {
         activeTest,
         setActiveTest,
         error,
+        resetTest,
     };
 };
 

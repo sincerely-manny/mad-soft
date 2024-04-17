@@ -6,9 +6,10 @@ import Loader from '@/components/shared/loader';
 type CountdownProps = {
     startTime: number;
     endUntil: number;
+    setTestCompleted: () => void;
 };
 
-export default function Countdown({ startTime, endUntil }: CountdownProps) {
+export default function Countdown({ startTime, endUntil, setTestCompleted }: CountdownProps) {
     const [clientTime, setClientTime] = useState(Date.now());
     const serverTime = useQuery({
         queryKey: ['currentTime'],
@@ -47,6 +48,7 @@ export default function Countdown({ startTime, endUntil }: CountdownProps) {
         progress = 100;
         minutesLeft = 0;
         secondsLeft = 0;
+        setTestCompleted();
     }
 
     return (

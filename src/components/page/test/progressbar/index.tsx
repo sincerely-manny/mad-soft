@@ -26,7 +26,7 @@ export default function ProgresBar({ current: progress, activeTest }: ProgresBar
                     className={`
                     step
                     relative
-                    ${e < progress && isAnswered(e - 1) ? 'step-neutral' : ''}
+                    ${isAnswered(e - 1) ? 'step-neutral' : ''}
                     ${e < progress && !isAnswered(e - 1) ? 'step-primary' : ''}
                     ${e === progress ? ' step-accent' : ''}
                 `}

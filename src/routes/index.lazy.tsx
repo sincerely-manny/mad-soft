@@ -2,8 +2,8 @@ import { Link, createLazyFileRoute } from '@tanstack/react-router';
 
 function Home() {
     return (
-        <section className="flex flex-col place-items-start gap-3 self-center text-balance">
-            <h1 className="mb-5 text-4xl">Привет!</h1>
+        <section className="flex grow flex-col place-items-start justify-center gap-3 place-self-stretch text-balance p-20">
+            <h1 className="mb-5 text-4xl">Привет! 👋</h1>
             <p>
                 Давайте начнем тест. Время на прохождение теста: <strong>15 минут.</strong>
             </p>
