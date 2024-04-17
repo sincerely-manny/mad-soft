@@ -20,13 +20,13 @@ function Results() {
                         <h2 className="text-2xl font-light">{question}</h2>
                         <div className="grid grid-cols-2">
                             <div>
-                                <h3 className="text-lg font-light">Ваши ответы</h3>
+                                <h3 className="text-lg font-light">Ваш ответ</h3>
                                 {activeTest?.answers[uuid] && (
                                     <ul>{activeTest?.answers[uuid].map((a) => <li key={a}>{a}</li>)}</ul>
                                 )}
                             </div>
                             <div>
-                                <h3 className="text-lg font-light">Правильные ответы</h3>
+                                <h3 className="text-lg font-light">Правильный ответ</h3>
                                 <ul>
                                     {getCorrectAnswer(uuid).map((a) => (
                                         <li key={a}>{a}</li>
